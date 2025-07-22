@@ -27,7 +27,7 @@ def get_github_release_tags() -> typing.Sequence[str]:
         if not data:
             break
         for release in data:
-            tags.append(release.tag_name)
+            tags.append(release["tag_name"])
         page += 1
 
     return tags
@@ -44,7 +44,7 @@ def get_github_commit_sha(tag: str) -> str:
     response2.raise_for_status()
     obj = response2.json()
 
-    if obj["type"] == "tag":
+    if "type" in obj and obj["type"] == "tag":
         response3 = requests.get(obj["object"]["url"])
         response3.raise_for_status()
         return response3.json()["sha"]
@@ -64,7 +64,7 @@ def docker_tag_exists(tag: str) -> bool:
 def build_and_push_image(tag: str, commit_hash: str) -> None:
     tag_name = f"{DOCKER_IMAGE}:{tag}"
     run(
-        f"podman build -f {DOCKERFILE} -t {tag_name} --build-arg COMMIT={commit_hash} ."
+        f"podman build -f {DOCKERFILE} -t {tag_name} --build-arg CHIPYARD_HASH={commit_hash} ."
     )
     run(f"podman push {tag_name}")
 
