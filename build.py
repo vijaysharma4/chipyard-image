@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-import requests
+# pylint: disable=missing-module-docstring,missing-function-docstring,missing-timeout
 import subprocess
 import typing
+
+import requests
 
 DOCKER_IMAGE: typing.Final[str] = "vijaysharma4/chipyard-image"
 DOCKERFILE: typing.Final[str] = "Dockerfile"
@@ -17,7 +19,9 @@ def get_github_release_tags() -> typing.Sequence[str]:
     page = 1
 
     while True:
-        response = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases?page={page}")
+        response = requests.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases?page={page}"
+        )
         response.raise_for_status()
         data = response.json()
         if not data:
@@ -30,7 +34,9 @@ def get_github_release_tags() -> typing.Sequence[str]:
 
 
 def get_github_commit_sha(tag: str) -> str:
-    response1 = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/git/ref/tags/{tag}")
+    response1 = requests.get(
+        f"https://api.github.com/repos/{GITHUB_REPO}/git/ref/tags/{tag}"
+    )
     response1.raise_for_status()
     data = response1.json()
 
@@ -47,12 +53,19 @@ def get_github_commit_sha(tag: str) -> str:
 
 
 def docker_tag_exists(tag: str) -> bool:
-    return requests.get(f"https://hub.docker.com/v2/repositories/{DOCKER_IMAGE}/tags/{tag}").status_code == 200
+    return (
+        requests.get(
+            f"https://hub.docker.com/v2/repositories/{DOCKER_IMAGE}/tags/{tag}"
+        ).status_code
+        == 200
+    )
 
 
-def build_and_push_image( tag: str, commit_hash: str) -> None:
+def build_and_push_image(tag: str, commit_hash: str) -> None:
     tag_name = f"{DOCKER_IMAGE}:{tag}"
-    run(f"podman build -f {DOCKERFILE} -t {tag_name} --build-arg COMMIT={commit} .")
+    run(
+        f"podman build -f {DOCKERFILE} -t {tag_name} --build-arg COMMIT={commit_hash} ."
+    )
     run(f"podman push {tag_name}")
 
 
@@ -65,12 +78,12 @@ def build_and_push_latest() -> None:
 def main():
     run("podman login docker.io")
 
-    for tag in get_github_release_tags(GITHUB_REPO):
+    for tag in get_github_release_tags():
         if docker_tag_exists(tag):
             print(f"{tag} already published; skipping")
         else:
             print(f"Building and pushing {tag}")
-            sha = get_github_commit_sha(GITHUB_REPO, tag)
+            sha = get_github_commit_sha(tag)
             build_and_push_image(tag, sha)
 
     print("Building and pushing latest")
