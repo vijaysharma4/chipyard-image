@@ -64,7 +64,7 @@ def docker_tag_exists(tag: str) -> bool:
 def build_and_push_image(tag: str, commit_hash: str) -> None:
     tag_name = f"{DOCKER_IMAGE}:{tag}"
     run(
-        f"podman build -f {DOCKERFILE} -t {tag_name} --build-arg CHIPYARD_HASH={commit_hash} ."
+        f"podman build -f {DOCKERFILE} -t {tag_name} --format docker --build-arg CHIPYARD_HASH={commit_hash} ."
     )
     run(f"podman push {tag_name}")
 
