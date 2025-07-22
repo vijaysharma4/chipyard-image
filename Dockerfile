@@ -5,8 +5,6 @@
 FROM ubuntu:20.04 as base
 ARG CHIPYARD_HASH
 
-MAINTAINER https://groups.google.com/forum/#!forum/chipyard
-
 SHELL ["/bin/bash", "-c"]
 
 # Install dependencies for ubuntu-req.sh
@@ -42,20 +40,7 @@ SHELL ["/bin/bash", "-cl"]
 RUN cd chipyard && \
         export MAKEFLAGS=-"j $(nproc)" && \
         conda activate base && \
-        ./setup.sh --env-name chipyard --skip-validate
-
-SHELL ["/opt/conda/bin/conda", "run", "-n", "chipyard", "/bin/bash", "-cl"]
-
-# Set up FireMarshal. Building and cleaning br-base.json builds the underlying
-# buildroot image (which takes a long time) but doesn't keep all the br-base
-# stuff around (since that's faster to rebuild).
-RUN cd chipyard && \
-        source env.sh && \
-        cd software/firemarshal && \
-        ./init-submodules.sh && \
-        pip3 install -r python-requirements.txt && \
-        ./marshal build br-base.json && \
-        ./marshal clean br-base.json
+        ./build-setup.sh
 
 # Run script to set environment variables on entry
 ENTRYPOINT ["chipyard/scripts/entrypoint.sh"]
